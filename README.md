@@ -1,6 +1,6 @@
 Tired of `mtcars` having only 32 rows? 
 
-This repo contains code to create up-to-date fuel economy data sets on demand. A few time-stamped versions are also contained here. 
+This repo contains code to create up-to-date fuel economy data sets on demand. A few time-stamped versions are also contained here. More information about the raw data can be found on the [government website](https://www.fueleconomy.gov/feg/ws/index.shtml). 
 
 Date-stamped data files are given along with the code that creates them (`import.R`). However, as with many things, the situation is complicated. There are some details below about our decisions here. You can override them in `import.R` though.
 
