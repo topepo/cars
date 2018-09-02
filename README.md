@@ -34,7 +34,7 @@ In our code, we keep the row corresponding to the earliest year (2015 in this ca
 
 Third, some cars have a single fuel type (e.g. "Regular", "Midgrade", "Premium", etc.) while others have multiple ("Regular Gas or Electricity", "Regular Gas _and_ Electricity", "Electricity", and so on). These data have the mpg for the _first_ fuel type listed. This is presumably only relevant to the cars with "or" in their fuel type field (> 300 cars). We decided to use the _best_ mpg across the types tested. We are estimating the best possible mileage that the car can produce. For example, a car that can use "Regular Gas or Electricity" would have its electricity MPG used as the outcome. 
 
-Forth, for cars without combustion engines, the engine displacement and cylinders were assigned values of zero. 
+Fourth, for cars without combustion engines, the engine displacement and cylinders were assigned values of zero. 
 
 Please contribute, especially if you:
 
