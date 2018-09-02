@@ -57,7 +57,7 @@ downloaded 1.4 MB
 # A tibble: 1 x 4
   path                                                                type 
   <fs::path>                                                          <fct>
-1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh80000gn/T/RtmpkvzsVj/raw.zip file 
+1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh80000gn/T/RtmpADj0NI/raw.zip file 
 # ... with 2 more variables: size <fs::bytes>, modification_time <dttm>
 > 
 > # get file name from inside zip
@@ -71,8 +71,8 @@ downloaded 1.4 MB
 # A tibble: 2 x 4
   path                                                                     type 
   <fs::path>                                                               <fct>
-1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh80000gn/T/RtmpkvzsVj/raw.zip      file 
-2 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh80000gn/T/RtmpkvzsVj/vehicles.csv file 
+1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh80000gn/T/RtmpADj0NI/raw.zip      file 
+2 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh80000gn/T/RtmpADj0NI/vehicles.csv file 
 # ... with 2 more variables: size <fs::bytes>, modification_time <dttm>
 > 
 > new_file_name <- 
@@ -269,6 +269,8 @@ See spec(...) for full column specifications.
 +   mutate(
 +     drive = as.factor(drive),
 +     make = as.factor(make),
++     model = as.factor(model),
++     fuel_type = as.factor(fuel_type),
 +     car_class = as.factor(car_class),
 +     transmission = as.factor(transmission)
 +   ) %>%
@@ -448,4 +450,4 @@ See spec(...) for full column specifications.
 +   q("no")
 > proc.time()
    user  system elapsed 
-  3.975   0.265   5.979 
+  3.732   0.244   5.670 

@@ -195,6 +195,8 @@ final_data <-
   mutate(
     drive = as.factor(drive),
     make = as.factor(make),
+    model = as.factor(model),
+    fuel_type = as.factor(fuel_type),
     car_class = as.factor(car_class),
     transmission = as.factor(transmission)
   ) %>%
