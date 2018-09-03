@@ -30,9 +30,9 @@ Second, there can be multiple rows for the same car that are replicates. If the 
 
 (all examples shown here are as of 2018/09/02)
 
-In our code, we keep the row corresponding to the earliest year (2015 in this case). To determine when there are replicates, we group the data on a few variables: make, model, engine displacement, the engine description, transmission type, fuel type,  and the unrounded city and combined mpg (but we'd like to have a better algorithm to figure this out). A little less than 20% of car configurations have this issue. 
+In our code, we keep the row corresponding to the earliest year (2015 in this case). To determine when there are replicates, we group the data on a few variables: make, model, engine displacement, the engine description, transmission type, fuel type, and the unrounded city and combined mpg (but we'd like to have a better algorithm to figure this out). A little less than 20% of car configurations have this issue. 
 
-Third, some cars have a single fuel type (e.g. "Regular", "Midgrade", "Premium", etc.) while others have multiple ("Regular Gas or Electricity", "Regular Gas _and_ Electricity", "Electricity", and so on). There are two fields for mpg and which fuel type was ued. We decided to use the _best_ mpg across the fuel types that were tested. We are estimating the best possible mileage that the car can produce. For example, a car that can use "Regular Gas or Electricity" would have its electricity MPG used as the outcome. This is presumably only relevant to the cars with "or" in their overall fuel type field (> 300 cars).
+Third, some cars have a single fuel type (e.g. "Regular", "Midgrade", "Premium", etc.) while others have multiple ("Regular Gas or Electricity", "Regular Gas _and_ Electricity", "Electricity", and so on). There are two fields for mpg and which fuel type was used. We decided to use the _best_ mpg across the fuel types that were tested. We are estimating the best possible mileage that the car can produce. For example, a car that can use "Regular Gas or Electricity" would have its electricity MPG used as the outcome. This is presumably only relevant to the cars with "or" in their overall fuel type field (> 300 cars).
 
 Fourth, for cars without combustion engines, the engine displacement and cylinders were assigned values of zero. 
 
