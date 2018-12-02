@@ -272,6 +272,26 @@ car_data <-
   dplyr::rename(mpg = city) %>%
   select(-comb)
 
+car_data %>% 
+  group_by(year) %>% 
+  count()
+
+# now remove duplciates again based on their exact values
+car_data <- 
+  car_data %>%
+  group_by(
+    make, model, eng_displ, cylinders, drive, fuel_type, transmission,
+    car_class, start_stop, flexible_fuel, plug_in_hybrid, hybrid,
+    turbo_charged, super_charged, mpg
+  ) %>% 
+  arrange(year) %>%
+  slice(1) %>%
+  ungroup()
+
+car_data %>% 
+  group_by(year) %>% 
+  count()
+
 car_train <- car_data %>%
   filter(year <= trn_stop_year)
 
@@ -279,11 +299,15 @@ car_test <- car_data %>%
   filter(year > trn_stop_year)
 
 new_data_path <- path(destination_path, paste0(date_path, "_city"))
+recent_data_path <- path(destination_path, "latest_city")
 
 dir_create(new_data_path)
 
 save(car_data, file = path(new_data_path, "car_data.RData"))
 save(car_train, car_test, file = path(new_data_path, "car_data_splits.RData"))
+
+save(car_data, file = path(recent_data_path, "car_data.RData"))
+save(car_train, car_test, file = path(recent_data_path, "car_data_splits.RData"))
 
 # Save the data with combined as the outcome -----------------------------------
 
@@ -292,6 +316,26 @@ car_data <-
   dplyr::rename(mpg = comb) %>%
   select(-city)
 
+car_data %>% 
+  group_by(year) %>% 
+  count()
+
+# now remove duplciates again based on their exact values
+car_data <- 
+  car_data %>%
+  group_by(
+    make, model, eng_displ, cylinders, drive, fuel_type, transmission,
+    car_class, start_stop, flexible_fuel, plug_in_hybrid, hybrid,
+    turbo_charged, super_charged, mpg
+  ) %>% 
+  arrange(year) %>%
+  slice(1) %>%
+  ungroup()
+
+car_data %>% 
+  group_by(year) %>% 
+  count()
+
 car_train <- car_data %>%
   filter(year <= trn_stop_year)
 
@@ -299,11 +343,16 @@ car_test <- car_data %>%
   filter(year > trn_stop_year)
 
 new_data_path <- path(destination_path, paste0(date_path, "_combined"))
+recent_data_path <- path(destination_path, "latest_combined")
 
 dir_create(new_data_path)
 
 save(car_data, file = path(new_data_path, "car_data.RData"))
 save(car_train, car_test, file = path(new_data_path, "car_data_splits.RData"))
+
+save(car_data, file = path(recent_data_path, "car_data.RData"))
+save(car_train, car_test, file = path(recent_data_path, "car_data_splits.RData"))
+
 
 # Save raw data file------------------------------------------------------------
 
