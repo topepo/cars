@@ -124,16 +124,27 @@ car_data <-
 
 # Remove replicate data for a car config (defined in `group_by` below) ---------
 
+# The unadjusted data can vary minutely over years (e.g. 145.0834 and 145.0835)
+# so we will look for uniqueness in the combined mpg data up to a threshold of
+# 1/10 mpg. 
+
+mpg_precision <- 1
+
 duplicates_removed <- 
   car_data %>%
+  mutate(
+    total_mpg = round(comb08U + combA08U + comb08U + combA08U, mpg_precision)
+  )%>%
   # If the car has not changed from year-to-year, it is listed in multiple rows.
   # We keep the first instance of that car.   
   group_by(
     make, model, displ, eng_dscr, trany, fuelType, turbo_charged, super_charged,
-    comb08U, combA08U, comb08U, combA08U
+    total_mpg
   ) %>% 
   arrange(year) %>%
-  slice(1) 
+  slice(1) %>%
+  ungroup() %>%
+  dplyr::select(-total_mpg)
 
 # Check to see of there are cars that are jointly marketed and have the 
 # same info for different manufacturers
@@ -149,7 +160,6 @@ check_multiple <-
   dplyr::filter(n > 1)
 
 check_multiple %>% nrow()
-
 
 # Take the per-row maximum mpg ------------------------------------------------
 
