@@ -1,0 +1,563 @@
+
+R version 3.6.0 (2019-04-26) -- "Planting of a Tree"
+Copyright (C) 2019 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(tidyverse)
+Registered S3 methods overwritten by 'ggplot2':
+  method         from 
+  [.quosures     rlang
+  c.quosures     rlang
+  print.quosures rlang
+Registered S3 method overwritten by 'rvest':
+  method            from
+  read_xml.response xml2
+── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──
+✔ ggplot2 3.1.1     ✔ purrr   0.3.2
+✔ tibble  2.1.3     ✔ dplyr   0.8.2
+✔ tidyr   0.8.3     ✔ stringr 1.4.0
+✔ readr   1.3.1     ✔ forcats 0.4.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+> library(fs)
+> library(sessioninfo)
+> 
+> # Download source data, unzip, and rename file with date stamp------------------
+> 
+> # Make this a local path if you want to save the files, 
+> #  otherwise use path_temp()
+> 
+> working_file_path <- path_temp()
+> destination_path <- getwd()
+> 
+> date_stamp <- format(Sys.Date(), "_%Y_%m_%d")
+> date_path <- substring(date_stamp, 2)
+> 
+> data_url <- "https://www.fueleconomy.gov/feg/epadata/vehicles.csv.zip"
+> 
+> target_zip_file <- path(working_file_path, "raw.zip")
+> 
+> download.file(url = data_url, destfile = target_zip_file)
+trying URL 'https://www.fueleconomy.gov/feg/epadata/vehicles.csv.zip'
+Content type 'application/x-zip-compressed' length 1538950 bytes (1.5 MB)
+==================================================
+downloaded 1.5 MB
+
+> 
+> dir_info(working_file_path) %>% 
++   filter(type == "file") %>% 
++   select(path, type, size, modification_time)
+# A tibble: 1 x 4
+  path                                        type      size modification_time  
+  <fs::path>                                  <fct> <fs::by> <dttm>             
+1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh800… file     1.47M 2019-07-03 10:31:43
+> 
+> # get file name from inside zip
+> zip_info <- unzip(target_zip_file, list = TRUE)
+> 
+> unzip(target_zip_file, exdir = working_file_path)
+> 
+> dir_info(working_file_path) %>% 
++   filter(type == "file") %>% 
++   select(path, type, size, modification_time)
+# A tibble: 2 x 4
+  path                                        type      size modification_time  
+  <fs::path>                                  <fct> <fs::by> <dttm>             
+1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh800… file     1.47M 2019-07-03 10:31:43
+2 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh800… file    16.54M 2019-07-03 10:31:43
+> 
+> new_file_name <- 
++   gsub("\\.csv$", paste0("_raw", date_stamp, "\\.csv"), zip_info$Name)
+> 
+> file_move(
++   path(working_file_path, zip_info$Name),
++   path(working_file_path, new_file_name)
++ )
+> 
+> dir_info(working_file_path) %>% 
++   filter(type == "file") %>% 
++   select(path, type, size, modification_time)
+# A tibble: 2 x 4
+  path                                        type      size modification_time  
+  <fs::path>                                  <fct> <fs::by> <dttm>             
+1 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh800… file     1.47M 2019-07-03 10:31:43
+2 /var/folders/lb/xhxqmcrd7gv302_b1pdfykh800… file    16.54M 2019-07-03 10:31:43
+> 
+> # Read in data, remove unwanted variables, and make some new columns -----------
+> 
+> # helpful resources
+> # https://www.fueleconomy.gov/feg/download.shtml
+> # https://www.fueleconomy.gov/feg/ws/index.shtml
+> 
+> car_data <- 
++   read_csv(path(working_file_path, new_file_name), guess_max = 30000) %>%
++   dplyr::select(
++     -barrels08,  -barrelsA08,  -charge120,  -charge240,  -city08,  -cityA08,  
++     -cityCD,  -cityE,  -cityUF,  -co2,  -co2A,  -co2TailpipeAGpm,  
++     -co2TailpipeGpm,  -comb08,  -combA08,  -combE,  -combinedCD,  
++     -combinedUF, -engId, -feScore,  -fuelCost08,  -fuelCostA08, -trans_dscr,  
++     -ghgScore,  -ghgScoreA,  -highway08,  -highway08U,  
++     -highwayA08,  -highwayA08U,  -highwayCD,  -highwayE,  -highwayUF,
++     -id, -mpgData, -range,  -rangeCity,  -rangeCityA,  -rangeHwy,  -rangeHwyA,
++     -UCity,  -UCityA,  -UHighway,  -UHighwayA, -youSaveSpend,  -guzzler,
++     -atvType,  -rangeA,  -evMotor,  -mfrCode,  -c240Dscr,  
++     -charge240b,  -c240bDscr,  -createdOn,  -modifiedOn,  -phevCity,  -phevHwy,  
++     -phevComb, -fuelType1, -fuelType2, -phevBlended
++   ) %>%
++   dplyr::filter(year >= 2015) %>%
++   # A lot of formatting factor levels to get rid of special chars and punct
++   mutate(
++     drive = gsub("([[:punct:]])", "", drive),
++     drive = gsub(" ", "_", drive),
++     drive = gsub("4", "four", drive),
++     drive = gsub("-", "_", drive),
++     drive = gsub("_(A1)", "", drive, fixed = TRUE),
++     
++     fuelType = gsub(" ", "_", fuelType),
++     
++     # Engine descriptor info ; there can be multiple values so make indicators
++     # for the most prevelant values.  
++     eng_dscr = gsub("Stop/Start", "Stop-Start", eng_dscr, fixed = TRUE),
++     spark_ignited_direct_injection  = ifelse(grepl("SIDI", eng_dscr), 1, 0),
++     flexible_fuel = ifelse(grepl("FFV", eng_dscr), 1, 0),
++     plug_in_hybrid = ifelse(grepl("PHEV", eng_dscr), 1, 0),
++     hybrid = ifelse(grepl("Hybrid", eng_dscr), 1, 0), # comb all hybrid types
++     port_fuel_injection = ifelse(grepl("PFI", eng_dscr), 1, 0),
++     hellcat = ifelse(grepl("Hellcat", eng_dscr), 1, 0),
++     startStop = ifelse(
++       startStop == "Y" | grepl("stop-start", tolower(eng_dscr)), 
++       1, 0),
++     ieloop = ifelse(grepl("i-ELOOP", eng_dscr), 1, 0),
++     partial_zero_emissions = ifelse(grepl("PZEV", eng_dscr), 1, 0),
++     eco = ifelse(grepl("Eco", eng_dscr), 1, 0),
++     z06 = ifelse(grepl("Z06", eng_dscr), 1, 0),
++     zr1 = ifelse(grepl("ZR1", eng_dscr), 1, 0),
++     
++     # More cleanup
++     VClass = gsub(" - ", "_", VClass),
++     VClass = gsub(",", "", VClass),
++     VClass = gsub(" ", "_", VClass),
++     
++     trany = gsub("[[:punct:]]", "", trany),
++     trany = gsub(" ", "_", trany),
++     
++     make = gsub("[[:punct:]]", "_", make),
++     make = gsub(" ", "_", make),
++     
++     turbo_charged = ifelse(!is.na(tCharger), 1, 0),
++     super_charged = ifelse(!is.na(sCharger), 1, 0),
++     
++     # For non-combustion engines
++     cylinders = ifelse(is.na(cylinders), 0, cylinders),
++     displ = ifelse(is.na(displ), 0, displ)
++     
++   ) 
+Parsed with column specification:
+cols(
+  .default = col_double(),
+  drive = col_character(),
+  eng_dscr = col_character(),
+  fuelType = col_character(),
+  fuelType1 = col_character(),
+  make = col_character(),
+  model = col_character(),
+  mpgData = col_character(),
+  phevBlended = col_logical(),
+  trany = col_character(),
+  VClass = col_character(),
+  guzzler = col_character(),
+  trans_dscr = col_character(),
+  tCharger = col_logical(),
+  sCharger = col_character(),
+  atvType = col_character(),
+  fuelType2 = col_character(),
+  rangeA = col_character(),
+  evMotor = col_character(),
+  mfrCode = col_character(),
+  c240Dscr = col_character()
+  # ... with 4 more columns
+)
+See spec(...) for full column specifications.
+> 
+> # In case you want to look at engine descriptions ------------------------------
+> 
+> # eng_descr <- strsplit(car_data$eng_dscr, ";")
+> # eng_descr <- unlist(eng_descr)
+> # eng_descr <- eng_descr[!is.na(eng_descr)]
+> # eng_descr <- gsub("^\\s+|\\s+$", "", eng_descr)
+> # sort(table(eng_descr))
+> 
+> # Remove replicate data for a car config (defined in `group_by` below) ---------
+> 
+> # The unadjusted data can vary minutely over years (e.g. 145.0834 and 145.0835)
+> # so we will look for uniqueness in the combined mpg data up to a threshold of
+> # 1/10 mpg. 
+> 
+> mpg_precision <- 1
+> 
+> duplicates_removed <- 
++   car_data %>%
++   mutate(
++     total_mpg = round(comb08U + combA08U + comb08U + combA08U, mpg_precision)
++   )%>%
++   # If the car has not changed from year-to-year, it is listed in multiple rows.
++   # We keep the first instance of that car.   
++   group_by(
++     make, model, displ, eng_dscr, trany, fuelType, turbo_charged, super_charged,
++     total_mpg
++   ) %>% 
++   arrange(year) %>%
++   slice(1) %>%
++   ungroup() %>%
++   dplyr::select(-total_mpg)
+> 
+> # Check to see of there are cars that are jointly marketed and have the 
+> # same info for different manufacturers
+> check_multiple <- 
++   duplicates_removed %>%
++   # There are cars that are jointly marketed and have the same info for 
++   # different manufacturers
++   group_by(
++     year, model, displ, eng_dscr, trany, fuelType, turbo_charged, super_charged
++   ) %>% 
++   count() %>%
++   arrange(desc(n)) %>%
++   dplyr::filter(n > 1)
+> 
+> check_multiple %>% nrow()
+[1] 0
+> 
+> # Take the per-row maximum mpg ------------------------------------------------
+> 
+> max_mpg_per_row <- 
++   duplicates_removed %>%
++   ungroup() %>%
++   mutate(
++     city = ifelse(city08U > cityA08U, city08U, cityA08U),
++     comb = ifelse(comb08U > combA08U, comb08U, combA08U),
++   ) %>%
++   select(-city08U, -cityA08U, -comb08U, -combA08U)
+> 
+> # check to make sure there is one row per car config (without fuel type)
+> check_one_config_per_row <- 
++   max_mpg_per_row %>%
++   group_by(
++     year, make, model, displ, eng_dscr, trany, turbo_charged, super_charged,
++     city, comb
++   ) %>% 
++   count() %>%
++   arrange(desc(n)) %>%
++   dplyr::filter(n > 1)
+> 
+> check_one_config_per_row %>% nrow()
+[1] 0
+> 
+> # Rename and select some variables; make factors -------------------------------
+> 
+> final_data <-
++   max_mpg_per_row %>%
++   dplyr::rename(
++     transmission = trany,
++     car_class = VClass,
++     fuel_type = fuelType,
++     hatch_lug_vol = hlv,
++     hatch_pas_vol = hpv,
++     two_door_pass_vol = pv2,
++     four_door_pass_vol = pv4,
++     two_door_lug_vol = lv2,
++     four_door_lug_vol = lv4,
++     start_stop = startStop,
++     eng_displ = displ
++   ) %>%
++   mutate(
++     drive = as.factor(drive),
++     make = as.factor(make),
++     model = as.factor(model),
++     fuel_type = as.factor(fuel_type),
++     car_class = as.factor(car_class),
++     transmission = as.factor(transmission)
++   ) %>%
++   # remove old columns
++   dplyr::select(-eng_dscr, -tCharger, -sCharger) 
+> 
+> # Get the number of replicates per config with and w/o gas data ----------------
+> 
+> # rnow() should be 0
+> 
+> final_num_config_gas <- 
++   final_data %>%
++   group_by(
++     year, make, model, eng_displ, transmission, turbo_charged, super_charged,
++     flexible_fuel, spark_ignited_direct_injection, hybrid, port_fuel_injection,
++     hellcat, start_stop, ieloop, partial_zero_emissions, eco, z06, zr1, drive, 
++     city, comb
++   ) %>% 
++   count() %>%
++   arrange(desc(n)) %>%
++   dplyr::filter(n > 1)
+> 
+> final_num_config_gas %>% nrow()
+[1] 0
+> 
+> final_num_config <- 
++   final_data %>%
++   group_by(
++     year, make, model, eng_displ, transmission, turbo_charged, super_charged,
++     flexible_fuel, spark_ignited_direct_injection, hybrid, port_fuel_injection,
++     hellcat, start_stop, ieloop, partial_zero_emissions, eco, z06, zr1, drive
++   ) %>% 
++   count() %>%
++   arrange(desc(n)) %>%
++   dplyr::filter(n > 1)
+> 
+> final_num_config_gas %>% nrow()
+[1] 0
+> 
+> # Check for completeness 
+> sum(!complete.cases(final_data))
+[1] 0
+> 
+> # Training/Test Splits ---------------------------------------------------------
+> 
+> # Create test set based on the most recent year's data. Combine years if there
+> # are not at least min_test_n cars in the latest year. 
+> 
+> min_test_n <- 250
+> 
+> trn_stop_year <- 
++   car_data %>%
++   group_by(year) %>% 
++   count() %>%
++   ungroup() %>%
++   arrange(desc(year)) %>%
++   mutate(running_n = cumsum(n)) %>%
++   dplyr::filter(running_n >= min_test_n) %>%
++   slice(2) %>%
++   pull(year)
+> 
+> # Save the data with city as the outcome ---------------------------------------
+> 
+> car_data <- 
++   final_data %>%
++   dplyr::rename(mpg = city) %>%
++   select(-comb)
+> 
+> car_data %>% 
++   group_by(year) %>% 
++   count()
+# A tibble: 6 x 2
+# Groups:   year [6]
+   year     n
+  <dbl> <int>
+1  2015  1283
+2  2016   777
+3  2017   869
+4  2018   733
+5  2019   792
+6  2020   161
+> 
+> # now remove duplciates again based on their exact values
+> car_data <- 
++   car_data %>%
++   group_by(
++     make, model, eng_displ, cylinders, drive, fuel_type, transmission,
++     car_class, start_stop, flexible_fuel, plug_in_hybrid, hybrid,
++     turbo_charged, super_charged, mpg
++   ) %>% 
++   arrange(year) %>%
++   slice(1) %>%
++   ungroup()
+> 
+> car_data %>% 
++   group_by(year) %>% 
++   count()
+# A tibble: 6 x 2
+# Groups:   year [6]
+   year     n
+  <dbl> <int>
+1  2015  1282
+2  2016   749
+3  2017   846
+4  2018   716
+5  2019   764
+6  2020   158
+> 
+> car_train <- car_data %>%
++   filter(year <= trn_stop_year)
+> 
+> car_test <- car_data %>%
++   filter(year > trn_stop_year)
+> 
+> new_data_path <- path(destination_path, paste0(date_path, "_city"))
+> recent_data_path <- path(destination_path, "latest_city")
+> 
+> dir_create(new_data_path)
+> 
+> save(car_data, file = path(new_data_path, "car_data.RData"))
+> save(car_train, car_test, file = path(new_data_path, "car_data_splits.RData"))
+> 
+> save(car_data, file = path(recent_data_path, "car_data.RData"))
+> save(car_train, car_test, file = path(recent_data_path, "car_data_splits.RData"))
+> 
+> # Save the data with combined as the outcome -----------------------------------
+> 
+> car_data <- 
++   final_data %>%
++   dplyr::rename(mpg = comb) %>%
++   select(-city)
+> 
+> car_data %>% 
++   group_by(year) %>% 
++   count()
+# A tibble: 6 x 2
+# Groups:   year [6]
+   year     n
+  <dbl> <int>
+1  2015  1283
+2  2016   777
+3  2017   869
+4  2018   733
+5  2019   792
+6  2020   161
+> 
+> # now remove duplciates again based on their exact values
+> car_data <- 
++   car_data %>%
++   group_by(
++     make, model, eng_displ, cylinders, drive, fuel_type, transmission,
++     car_class, start_stop, flexible_fuel, plug_in_hybrid, hybrid,
++     turbo_charged, super_charged, mpg
++   ) %>% 
++   arrange(year) %>%
++   slice(1) %>%
++   ungroup()
+> 
+> car_data %>% 
++   group_by(year) %>% 
++   count()
+# A tibble: 6 x 2
+# Groups:   year [6]
+   year     n
+  <dbl> <int>
+1  2015  1283
+2  2016   762
+3  2017   863
+4  2018   722
+5  2019   781
+6  2020   160
+> 
+> car_train <- car_data %>%
++   filter(year <= trn_stop_year)
+> 
+> car_test <- car_data %>%
++   filter(year > trn_stop_year)
+> 
+> new_data_path <- path(destination_path, paste0(date_path, "_combined"))
+> recent_data_path <- path(destination_path, "latest_combined")
+> 
+> dir_create(new_data_path)
+> 
+> save(car_data, file = path(new_data_path, "car_data.RData"))
+> save(car_train, car_test, file = path(new_data_path, "car_data_splits.RData"))
+> 
+> save(car_data, file = path(recent_data_path, "car_data.RData"))
+> save(car_train, car_test, file = path(recent_data_path, "car_data_splits.RData"))
+> 
+> 
+> # Save raw data file------------------------------------------------------------
+> 
+> file_move(
++   path(working_file_path, new_file_name),
++   path(destination_path, "raw", new_file_name)
++ )
+> 
+> # Package versions -------------------------------------------------------------
+> 
+> session_info()
+─ Session info ───────────────────────────────────────────────────────────────
+ setting  value                       
+ version  R version 3.6.0 (2019-04-26)
+ os       macOS High Sierra 10.13.6   
+ system   x86_64, darwin15.6.0        
+ ui       X11                         
+ language (EN)                        
+ collate  en_US.UTF-8                 
+ ctype    en_US.UTF-8                 
+ tz       America/New_York            
+ date     2019-07-03                  
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package     * version     date       lib source                               
+ assertthat    0.2.1       2019-03-21 [1] CRAN (R 3.6.0)                       
+ backports     1.1.4       2019-04-10 [1] CRAN (R 3.6.0)                       
+ broom         0.5.1       2018-12-05 [1] CRAN (R 3.6.0)                       
+ cellranger    1.1.0       2016-07-27 [1] CRAN (R 3.6.0)                       
+ cli           1.1.0       2019-03-19 [1] CRAN (R 3.6.0)                       
+ colorspace    1.4-1       2019-03-18 [1] CRAN (R 3.6.0)                       
+ crayon        1.3.4       2017-09-16 [1] CRAN (R 3.6.0)                       
+ dplyr       * 0.8.2       2019-06-29 [1] CRAN (R 3.6.0)                       
+ fansi         0.4.0       2018-10-05 [1] CRAN (R 3.6.0)                       
+ forcats     * 0.4.0       2019-02-17 [1] CRAN (R 3.6.0)                       
+ fs          * 1.3.1       2019-05-06 [1] CRAN (R 3.6.0)                       
+ generics      0.0.2       2018-11-29 [1] CRAN (R 3.6.0)                       
+ ggplot2     * 3.1.1       2019-04-07 [1] CRAN (R 3.6.0)                       
+ glue          1.3.1       2019-03-12 [1] CRAN (R 3.6.0)                       
+ gtable        0.3.0       2019-03-25 [1] CRAN (R 3.6.0)                       
+ haven         2.1.0       2019-02-19 [1] CRAN (R 3.6.0)                       
+ hms           0.4.2       2018-03-10 [1] CRAN (R 3.6.0)                       
+ httr          1.4.0       2018-12-11 [1] CRAN (R 3.6.0)                       
+ jsonlite      1.6         2018-12-07 [1] CRAN (R 3.6.0)                       
+ lattice       0.20-38     2018-11-04 [1] CRAN (R 3.6.0)                       
+ lazyeval      0.2.2       2019-03-15 [1] CRAN (R 3.6.0)                       
+ lubridate     1.7.4       2018-04-11 [1] CRAN (R 3.5.0)                       
+ magrittr      1.5         2014-11-22 [1] CRAN (R 3.6.0)                       
+ modelr        0.1.4       2019-02-18 [1] CRAN (R 3.6.0)                       
+ munsell       0.5.0       2018-06-12 [1] CRAN (R 3.6.0)                       
+ nlme          3.1-139     2019-04-09 [1] CRAN (R 3.6.0)                       
+ pillar        1.4.2       2019-06-29 [1] CRAN (R 3.6.0)                       
+ pkgconfig     2.0.2       2018-08-16 [1] CRAN (R 3.6.0)                       
+ plyr          1.8.4       2016-06-08 [1] CRAN (R 3.6.0)                       
+ purrr       * 0.3.2       2019-03-15 [1] CRAN (R 3.6.0)                       
+ R6            2.4.0       2019-02-14 [1] CRAN (R 3.6.0)                       
+ Rcpp          1.0.1       2019-03-17 [1] CRAN (R 3.6.0)                       
+ readr       * 1.3.1       2018-12-21 [1] CRAN (R 3.6.0)                       
+ readxl        1.3.1       2019-03-13 [1] CRAN (R 3.6.0)                       
+ rlang         0.4.0.9000  2019-06-30 [1] Github (r-lib/rlang@fc1aae2)         
+ rstudioapi    0.10        2019-03-19 [1] CRAN (R 3.6.0)                       
+ rvest         0.3.2       2016-06-17 [1] CRAN (R 3.6.0)                       
+ scales        1.0.0       2018-08-09 [1] CRAN (R 3.6.0)                       
+ sessioninfo * 1.1.1.9000  2019-03-26 [1] Github (r-lib/sessioninfo@dfb3ea8)   
+ stringi       1.4.3       2019-03-12 [1] CRAN (R 3.6.0)                       
+ stringr     * 1.4.0       2019-02-10 [1] CRAN (R 3.6.0)                       
+ tibble      * 2.1.3       2019-06-06 [1] CRAN (R 3.6.0)                       
+ tidyr       * 0.8.3       2019-03-01 [1] CRAN (R 3.6.0)                       
+ tidyselect    0.2.5       2018-10-11 [1] CRAN (R 3.6.0)                       
+ tidyverse   * 1.2.1       2017-11-14 [1] CRAN (R 3.6.0)                       
+ utf8          1.1.4       2018-05-24 [1] CRAN (R 3.6.0)                       
+ vctrs         0.1.99.9000 2019-06-30 [1] Github (r-lib/vctrs@4c0e04a)         
+ withr         2.1.2       2018-03-15 [1] CRAN (R 3.6.0)                       
+ xml2          1.2.0.9000  2019-06-30 [1] Github (HenrikBengtsson/xml2@618bc74)
+ zeallot       0.1.0       2018-01-28 [1] CRAN (R 3.6.0)                       
+
+[1] /Library/Frameworks/R.framework/Versions/3.6/Resources/library
+> 
+> if (!interactive())
++   q("no")
+> proc.time()
+   user  system elapsed 
+  7.816   0.226   8.631 
